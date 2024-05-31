@@ -57,21 +57,10 @@ std::vector<int> scalar_to_vec(int in) {
 }
 
 
-/*
-void test0() {
-    using namespace functionalcpp;
-    std::vector<int> numbers = {1, -2, 3, -4, 5};
-    auto pipeline = Processor<std::vector<int>, std::vector<int>>(filterPositive) |
-                    Processor<std::vector<int>, std::vector<int>>(square) |
-                    Processor<std::vector<int>, void>(print);
-    pipeline(numbers);
-    pipeline({6, -7, 8, -9, 10});
-}
-*/
-
 struct Queue {
     std::deque<int> _queue;
 };
+
 
 struct QueueWrapper {
     QueueWrapper() {
@@ -91,35 +80,58 @@ struct QueueWrapper {
     std::shared_ptr<Queue> _pQueue;
 };
 
-
-void test1() {
+auto getPipeline(QueueWrapper& queue) {
     using namespace functionalcpp;
+
     using IntVec = std::vector<int>;
-    IntVec numbers = {1, -2, 3, -4, 5};
     using ProcIntVec = Processor<IntVec, IntVec>;
+
     auto summer = Processor<IntVec, int>(Sum());
     auto filter = ProcIntVec(filterPositive);
     auto square_er = ProcIntVec(square);
-    auto printer = Processor<std::vector<int>, void>(print);
+
     auto minusOne = ProcIntVec(MinusOne());
 
-    auto queue = QueueWrapper();
+//    auto queue = QueueWrapper(); // callable with shared state
     auto queueProc = ProcIntVec(queue);
 
-    auto pipeline = filter | square_er | minusOne | queueProc;
-    auto pipelineWithPrint = pipeline | printer;
-    auto pipelineWithSumAndPrint = pipeline | summer | Processor<int, IntVec>(scalar_to_vec) | printer;
+    return filter | square_er | minusOne | queueProc;
+}
+
+void test1() {
+    std::vector<int> numbers = {1, -2, 3, -4, 5};
+
+    using namespace functionalcpp;
+
+    using IntVec = std::vector<int>;
+
+    auto vectorPrinter = Processor<IntVec, void>(print);
+    auto summer = Processor<IntVec, int>(Sum());
+
+    auto queue = QueueWrapper(); // callable with shared state
+    auto pipeline = getPipeline(queue); // auto pipeline = filter | square_er | minusOne | queueProc;
+    auto pipelineWithPrint = pipeline | vectorPrinter;
+    auto pipelineWithSumAndPrint = pipeline | summer | Processor<int, IntVec>(scalar_to_vec) | vectorPrinter;
 
     pipelineWithPrint(numbers);
     pipelineWithSumAndPrint(numbers);
     queue.print();
-    pipelineWithPrint({6, -7, 8, -9, 10});
-    pipelineWithSumAndPrint({6, -7, 8, -9, 10});
-    queue.print();
 }
 
+
+void test0() {
+    using namespace functionalcpp;
+    std::vector<int> numbers = {1, -2, 3, -4, 5};
+    auto pipeline = Processor<std::vector<int>, std::vector<int>>(filterPositive) |
+                    Processor<std::vector<int>, std::vector<int>>(square) |
+                    Processor<std::vector<int>, void>(print);
+    pipeline(numbers);
+}
+
+
 int main() {
-//    test0();
+    test0();
+    std::cout << std::endl;
     test1();
 
     return 0;
