@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 #include <functional>
 #include <iterator> // Include for std::back_inserter
 #include <utility>
@@ -28,7 +29,33 @@ void print(const std::vector<int>& data) {
     std::cout << std::endl;
 }
 
+class MinusOne {
+public:
+    MinusOne() = default;
 
+    std::vector<int> operator()(std::vector<int> in) {
+        std::vector<int> out = std::move(in);
+        std::transform(out.begin(), out.end(), out.begin(), [](int num) {return num - 1;});
+        return out;
+    }
+private:
+//    std::unique_ptr<int> _no_copy;
+};
+
+
+struct Sum {
+    int operator()(std::vector<int> in) {
+        return std::accumulate(in.begin(), in.end(), 0);
+    }
+};
+
+
+std::vector<int> scalar_to_vec(int in) {
+    return {in};
+}
+
+
+/*
 void test0() {
     using namespace functionalcpp;
     std::vector<int> numbers = {1, -2, 3, -4, 5};
@@ -38,20 +65,30 @@ void test0() {
     pipeline(numbers);
     pipeline({6, -7, 8, -9, 10});
 }
+*/
 
 void test1() {
     using namespace functionalcpp;
-    std::vector<int> numbers = {1, -2, 3, -4, 5};
-    auto filter = Processor<std::vector<int>, std::vector<int>>(filterPositive);
-    auto square_er = Processor<std::vector<int>, std::vector<int>>(square);
+    using IntVec = std::vector<int>;
+    IntVec numbers = {1, -2, 3, -4, 5};
+    using ProcIntVec = Processor<IntVec, IntVec>;
+    auto summer = Processor<IntVec, int>(Sum());
+    auto filter = ProcIntVec(filterPositive);
+    auto square_er = ProcIntVec(square);
     auto printer = Processor<std::vector<int>, void>(print);
-    auto pipeline = filter | square_er | printer ;
-    pipeline(numbers);
-    pipeline({6, -7, 8, -9, 10});
+    auto minusOne = ProcIntVec(MinusOne());
+    auto pipeline = filter | square_er | minusOne;
+    auto pipelineWithPrint = pipeline | printer;
+    auto pipelineWithSumAndPrint = pipeline | summer | Processor<int, IntVec>(scalar_to_vec) | printer;
+
+    pipelineWithPrint(numbers);
+    pipelineWithSumAndPrint(numbers);
+    pipelineWithPrint({6, -7, 8, -9, 10});
+    pipelineWithSumAndPrint({6, -7, 8, -9, 10});
 }
 
 int main() {
-    test0();
+//    test0();
     test1();
 
     return 0;
