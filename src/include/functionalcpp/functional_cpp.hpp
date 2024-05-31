@@ -1,24 +1,48 @@
+#include <functional>
+
+#include <iostream> // TODO: remove
 
 namespace functionalcpp {
 
-    template<typename CURRENT_FUNCTION, typename NEXT_FUNCTION>
+    template<typename IN, typename OUT>
     class Function {
     public:
-        explicit Function(const CURRENT_FUNCTION& curFunc) : _curFunc(&curFunc) { }
-        explicit Function(const CURRENT_FUNCTION& curFunc, const NEXT_FUNCTION& nextFunc) : _curFunc(&curFunc), _nextFunc(&nextFunc) { }
+        using ProcessFunction = std::function<OUT(IN&)>;
 
-        Function<CURRENT_FUNCTION, NEXT_FUNCTION> operator|(const NEXT_FUNCTION& nextFunc) {
-            Function<CURRENT_FUNCTION, NEXT_FUNCTION> function(_curFunc, _nextFunc);
-            return function;
+        explicit Function(Function<IN,OUT>::ProcessFunction func) : _processFunc(std::move(func)) {}
+
+        // Overload the pipe operator to chain processing steps
+        template<typename NewOut>
+        Function<IN, NewOut> operator|(typename Function<OUT, NewOut>::ProcessFunction nextFunc) const {
+            return Function<IN, NewOut>([this, nextFunc](IN input) {
+                return nextFunc(processFunc(input));
+            });
         }
 
-        void operator()() {
-
+        // Apply the processing function to the data
+        OUT operator()(IN& input) const {
+            return processFunc(input);
         }
 
     private:
-        const CURRENT_FUNCTION* _curFunc{};
-        const NEXT_FUNCTION* _nextFunc{};
+        ProcessFunction _processFunc{};
     };
+/*
+    class FunctionExample : public Function<std::function<void()>, std::function<void()>> {
+    public:
+        FunctionExample() = default;
+
+        void operator()(int x) {
+            std::cout << x << std::endl;
+
+        }
+        void process(int x) {
+            std::cout << x << std::endl;
+
+        }
+    private:
+
+    };
+    */
 
 }
