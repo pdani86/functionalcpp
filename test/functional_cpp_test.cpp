@@ -80,7 +80,7 @@ using ProcessFunction = std::function<Out(In)>;
 // Define a processing component that applies a function to a vector
 template<typename In, typename Out>
 class Processor {
-//private:
+private:
 public:
     ProcessFunction<In, Out> processFunc;
 
@@ -89,9 +89,9 @@ public:
 
     // Overload the pipe operator to chain processing steps
     template<typename NewOut>
-    auto operator|(Processor<Out, NewOut> nextProcessor) const {
-        return Processor<In, NewOut>([this, nextProcessor](In input) {
-            return nextProcessor.processFunc(this->processFunc(input));
+    Processor<In, NewOut> operator|(Processor<Out, NewOut> nextProcessor) const {
+        return Processor<In, NewOut>([first = this->processFunc, second = nextProcessor.processFunc](In input) {
+            return second(first(input));
         });
     }
 
@@ -126,24 +126,14 @@ int main() {
     // Sample data
     std::vector<int> numbers = {1, -2, 3, -4, 5};
 
-    auto procFilterPositive = Processor<std::vector<int>, std::vector<int>>(filterPositive);
-    auto procSquare = Processor<std::vector<int>, std::vector<int>>(square);
-    auto printer = Processor<std::vector<int>, void>(print);
-
     // Define the processing pipeline
-//    auto pipeline = procFilterPositive |
-//                    procSquare |
-//                    printer;
+    auto pipeline = Processor<std::vector<int>, std::vector<int>>(filterPositive) |
+                    Processor<std::vector<int>, std::vector<int>>(square) |
+                    Processor<std::vector<int>, void>(print);
 
-//    (procFilterPositive | procSquare | printer)(numbers);
-
-    (Processor<std::vector<int>, std::vector<int>>(filterPositive) |
-    Processor<std::vector<int>, std::vector<int>>(square) |
-    Processor<std::vector<int>, void>(print))(numbers);
-
-
-    // Execute the pipeline
-//    pipeline(numbers);
+    // Execute the pipeline multiple times
+    pipeline(numbers);
+    pipeline({6, -7, 8, -9, 10});
 
     return 0;
 }
