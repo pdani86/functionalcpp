@@ -8,6 +8,8 @@
 #include <iterator> // Include for std::back_inserter
 #include <utility>
 
+#include <queue>
+
 // Define some example processing functions
 std::vector<int> filterPositive(const std::vector<int>& data) {
     std::vector<int> result;
@@ -67,6 +69,29 @@ void test0() {
 }
 */
 
+struct Queue {
+    std::deque<int> _queue;
+};
+
+struct QueueWrapper {
+    QueueWrapper() {
+        _pQueue = std::make_shared<Queue>();
+    }
+
+    std::vector<int> operator()(std::vector<int> in) {
+        std::for_each(in.begin(), in.end(),[&_queue=_pQueue->_queue] (auto val) mutable {_queue.push_back(val);});
+        return std::move(in);
+    }
+
+    void print() {
+        auto& _queue = _pQueue->_queue;
+        std::for_each(_queue.begin(), _queue.end(), [](int val) {std::cout << val << ", ";});
+        std::cout << std::endl;
+    }
+    std::shared_ptr<Queue> _pQueue;
+};
+
+
 void test1() {
     using namespace functionalcpp;
     using IntVec = std::vector<int>;
@@ -77,14 +102,20 @@ void test1() {
     auto square_er = ProcIntVec(square);
     auto printer = Processor<std::vector<int>, void>(print);
     auto minusOne = ProcIntVec(MinusOne());
-    auto pipeline = filter | square_er | minusOne;
+
+    auto queue = QueueWrapper();
+    auto queueProc = ProcIntVec(queue);
+
+    auto pipeline = filter | square_er | minusOne | queueProc;
     auto pipelineWithPrint = pipeline | printer;
     auto pipelineWithSumAndPrint = pipeline | summer | Processor<int, IntVec>(scalar_to_vec) | printer;
 
     pipelineWithPrint(numbers);
     pipelineWithSumAndPrint(numbers);
+    queue.print();
     pipelineWithPrint({6, -7, 8, -9, 10});
     pipelineWithSumAndPrint({6, -7, 8, -9, 10});
+    queue.print();
 }
 
 int main() {
