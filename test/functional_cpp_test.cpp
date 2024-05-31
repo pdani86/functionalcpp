@@ -23,21 +23,45 @@ void print(const std::vector<int>& data) {
     }
     std::cout << std::endl;
 }
+//
+//void test0() {
+//    using namespace functionalcpp;
+//    // Sample data
+//    std::vector<int> numbers = {1, -2, 3, -4, 5};
+//
+//    // Define the processing pipeline
+//    auto pipeline = Function<std::vector<int>, std::vector<int>>(filterPositive) |
+//                    square |
+//                    [](const std::vector<int>& data) {
+//                        print(data);
+//                        return data;  // For the sake of type consistency
+//                    };
+//
+//    // Execute the pipeline
+//    pipeline(numbers);
+//}
 
-int main() {
+
+void test1() {
     using namespace functionalcpp;
     // Sample data
     std::vector<int> numbers = {1, -2, 3, -4, 5};
 
-    // Define the processing pipeline
-    auto pipeline = Function<std::vector<int>, std::vector<int>>(filterPositive) |
-                    square |
-                    [](const std::vector<int>& data) {
-                        print(data);
-                        return data;  // For the sake of type consistency
-                    };
+    auto func = Function<std::vector<int>, std::vector<int>>(filterPositive);
+    print(func(numbers));
+    auto func2 = func | Function<std::vector<int>, std::vector<int>>(square);
+//    func2(numbers);
+//    auto pipeline =  |
+//                    square |
+//                    [](const std::vector<int>& data) {
+//                        print(data);
+//                        return data;  // For the sake of type consistency
+//                    };
+}
 
-    // Execute the pipeline
-    pipeline(numbers);
+int main() {
+//    test0();
+    test1();
+
 	return 0;
 }
