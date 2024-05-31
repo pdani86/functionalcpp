@@ -31,18 +31,12 @@ void print(const std::vector<int>& data) {
 
 void test0() {
     using namespace functionalcpp;
-    // Sample data
     std::vector<int> numbers = {1, -2, 3, -4, 5};
-
-    // Define the processing pipeline
     auto pipeline = Processor<std::vector<int>, std::vector<int>>(filterPositive) |
                     Processor<std::vector<int>, std::vector<int>>(square) |
                     Processor<std::vector<int>, void>(print);
-
-    // Execute the pipeline multiple times
     pipeline(numbers);
     pipeline({6, -7, 8, -9, 10});
-
 }
 
 void test1() {
