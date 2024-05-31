@@ -6,3 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(${PROJECT_NAME}
 	functional_cpp_test.cpp
 )
+
+target_include_directories(${PROJECT_NAME}
+		PRIVATE ${CMAKE_SOURCE_DIR}/src/include
+)
